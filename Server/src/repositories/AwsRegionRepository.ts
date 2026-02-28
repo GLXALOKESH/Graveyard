@@ -9,7 +9,11 @@ export class AwsRegionRepository implements IRegionRepository {
   private ec2Client: EC2Client;
 
   constructor() {
-    this.ec2Client = createEC2Client();
+    this.ec2Client = this.createEC2Client();
+  }
+
+  protected createEC2Client(): EC2Client {
+    return createEC2Client();
   }
 
   async getAllRegions(): Promise<Region[]> {

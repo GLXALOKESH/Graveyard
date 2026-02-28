@@ -12,3 +12,4 @@ accountRouter.post(AccountRoutes.SUMMARY, validateDto(AccountScanRequestDTO, "bo
 accountRouter.post(AccountRoutes.OVERVIEW, validateDto(AccountScanRequestDTO, "body"), getAccountOverview);
 
 export default accountRouter;
+ 
