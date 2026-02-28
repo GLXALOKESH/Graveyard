@@ -6,8 +6,12 @@ import {
 import { createRDSClient } from "../configs/awsClientFactory.js";
 
 export class AwsRdsRepository implements IRDSRepository {
+  protected createRDSClient(region: string): RDSClient {
+    return createRDSClient(region);
+  }
+
   async getRunningInstances(region: string): Promise<RDSInstance[]> {
-    const rdsClient = createRDSClient(region);
+    const rdsClient = this.createRDSClient(region);
 
     try {
       const instances: RDSInstance[] = [];

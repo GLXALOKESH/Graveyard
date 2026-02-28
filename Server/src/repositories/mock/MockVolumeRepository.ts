@@ -1,4 +1,4 @@
-import { IVolumeRepository } from "../../interfaces/IVolumeRepository.js";
+import { IVolumeRepository, Volume } from "../../interfaces/IVolumeRepository.js";
 import { MockCloudState } from "./MockCloudState.js";
 
 // Volume interface for mock storage
@@ -87,6 +87,18 @@ export class MockVolumeRepository implements IVolumeRepository {
    */
   listVolumes(region: string): MockVolume[] {
     return this.volumes.get(region) || [];
+  }
+
+  /**
+   * IVolumeRepository implementation - Get volumes with intelligence support
+   */
+  async getVolumes(region: string): Promise<Volume[]> {
+    const mockVolumes = this.volumes.get(region) || [];
+    return mockVolumes.map((v) => ({
+      volumeId: v.volumeId,
+      status: v.status,
+      size: v.size,
+    }));
   }
 
   /**

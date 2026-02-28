@@ -6,15 +6,22 @@ import {
 import { createEC2Client } from "../configs/awsClientFactory.js";
 
 export class AwsRegionRepository implements IRegionRepository {
-  private ec2Client: EC2Client;
+  private ec2Client: EC2Client | null = null;
 
-  constructor() {
-    this.ec2Client = createEC2Client();
+  protected getEC2Client(): EC2Client {
+    if (!this.ec2Client) {
+      this.ec2Client = this.createEC2Client();
+    }
+    return this.ec2Client;
+  }
+
+  protected createEC2Client(): EC2Client {
+    return createEC2Client();
   }
 
   async getAllRegions(): Promise<Region[]> {
     const command = new DescribeRegionsCommand({});
-    const response = await this.ec2Client.send(command);
+    const response = await this.getEC2Client().send(command);
 
     const regions: Region[] = [];
 

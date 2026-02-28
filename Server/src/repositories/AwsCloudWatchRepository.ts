@@ -7,6 +7,10 @@ import { ICloudWatchRepository } from "../interfaces/ICloudWatchRepository.js";
 import { createCloudWatchClient } from "../configs/awsClientFactory.js";
 
 export class AwsCloudWatchRepository implements ICloudWatchRepository {
+  protected createCloudWatchClient(region: string): CloudWatchClient {
+    return createCloudWatchClient(region);
+  }
+
   private async getAverageMetric(
     region: string,
     namespace: string,
@@ -14,7 +18,7 @@ export class AwsCloudWatchRepository implements ICloudWatchRepository {
     dimensions: { Name: string; Value: string }[],
     days: number = 7
   ): Promise<number> {
-    const cloudWatchClient = createCloudWatchClient(region);
+    const cloudWatchClient = this.createCloudWatchClient(region);
 
     try {
       const endTime = new Date();
@@ -80,7 +84,7 @@ export class AwsCloudWatchRepository implements ICloudWatchRepository {
     functionName: string,
     days: number = 7
   ): Promise<number> {
-    const cloudWatchClient = createCloudWatchClient(region);
+    const cloudWatchClient = this.createCloudWatchClient(region);
 
     try {
       const endTime = new Date();
@@ -132,7 +136,7 @@ export class AwsCloudWatchRepository implements ICloudWatchRepository {
     instanceId: string,
     days: number = 7
   ): Promise<number> {
-    const cloudWatchClient = createCloudWatchClient(region);
+    const cloudWatchClient = this.createCloudWatchClient(region);
 
     try {
       const endTime = new Date();

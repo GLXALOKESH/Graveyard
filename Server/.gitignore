@@ -51,3 +51,9 @@ tmp/
 temp/
 
 ZOMBIE_SCORING_ALGORITHMS.md
+ACCOUNT_API.md
+
+__tests__/
+*.config.js
+*.test.js
+*.test.ts

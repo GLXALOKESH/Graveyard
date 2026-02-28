@@ -2,40 +2,42 @@ import { Request, Response, NextFunction } from "express";
 import { OverviewService } from "../../services/OverviewService.js";
 import { ZombieScoringService } from "../../services/ZombieScoringService.js";
 import { redisClient } from "../../configs/redisClient.js";
-import { RepositoryFactory } from "../../configs/repositoryFactory.js";
+import { DynamicRepositoryFactory } from "../../configs/dynamicRepositoryFactory.js";
 import { ResponseDTO } from "../../DTOClasses/response.DTO.js";
 import { OverviewDTO } from "../../DTOClasses/Overview.DTO.js";
 
-// Get repositories from factory (switches between AWS and Mock based on USE_MOCK env var)
-const accountRepository = RepositoryFactory.getAccountRepository();
-const regionRepository = RepositoryFactory.getRegionRepository();
-const instanceRepository = RepositoryFactory.getInstanceRepository();
-const rdsRepository = RepositoryFactory.getRdsRepository();
-const ecsRepository = RepositoryFactory.getEcsRepository();
-const lambdaRepository = RepositoryFactory.getLambdaRepository();
-const cloudWatchRepository = RepositoryFactory.getCloudWatchRepository();
-const zombieScoringService = new ZombieScoringService();
-
-const overviewService = new OverviewService(
-  accountRepository,
-  regionRepository,
-  instanceRepository,
-  rdsRepository,
-  ecsRepository,
-  lambdaRepository,
-  cloudWatchRepository,
-  zombieScoringService,
-  redisClient
-);
-
-export const getOverview = async (
+export const getAccountOverview = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const { accountType, credentials, region } = req.body;
     const refresh = req.query.refresh === "true";
-    const overview = await overviewService.getOverview(refresh);
+
+    // Create repositories dynamically based on request
+    const repos = DynamicRepositoryFactory.createRepositories(
+      accountType,
+      credentials,
+      region
+    );
+
+    const zombieScoringService = new ZombieScoringService();
+
+    const overviewService = new OverviewService(
+      repos.accountRepository,
+      repos.regionRepository,
+      repos.instanceRepository,
+      repos.rdsRepository,
+      repos.ecsRepository,
+      repos.lambdaRepository,
+      repos.volumeRepository,
+      repos.cloudWatchRepository,
+      zombieScoringService,
+      redisClient
+    );
+
+    const overview = await overviewService.getAccountOverview(refresh);
 
     const response = new ResponseDTO<OverviewDTO>();
     response.setStatus(true);

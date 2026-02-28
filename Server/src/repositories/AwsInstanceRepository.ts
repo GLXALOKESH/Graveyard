@@ -10,8 +10,12 @@ import {
 import { createEC2Client } from "../configs/awsClientFactory.js";
 
 export class AwsInstanceRepository implements IInstanceRepository {
+  protected createEC2Client(region: string): EC2Client {
+    return createEC2Client(region);
+  }
+
   async countRunningInstances(region: string): Promise<number> {
-    const ec2Client = createEC2Client(region);
+    const ec2Client = this.createEC2Client(region);
 
     try {
       let runningCount = 0;
@@ -48,7 +52,7 @@ export class AwsInstanceRepository implements IInstanceRepository {
   }
 
   async getRunningInstances(region: string): Promise<EC2Instance[]> {
-    const ec2Client = createEC2Client(region);
+    const ec2Client = this.createEC2Client(region);
 
     try {
       const instances: EC2Instance[] = [];

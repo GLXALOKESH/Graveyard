@@ -13,8 +13,12 @@ import {
 import { createECSClient } from "../configs/awsClientFactory.js";
 
 export class AwsEcsRepository implements IEcsRepository {
+  protected createECSClient(region: string): ECSClient {
+    return createECSClient(region);
+  }
+
   async getClusters(region: string): Promise<ECSCluster[]> {
-    const ecsClient = createECSClient(region);
+    const ecsClient = this.createECSClient(region);
 
     try {
       const clusters: ECSCluster[] = [];
@@ -60,7 +64,7 @@ export class AwsEcsRepository implements IEcsRepository {
     region: string,
     clusterArn: string
   ): Promise<ECSService[]> {
-    const ecsClient = createECSClient(region);
+    const ecsClient = this.createECSClient(region);
 
     try {
       const services: ECSService[] = [];

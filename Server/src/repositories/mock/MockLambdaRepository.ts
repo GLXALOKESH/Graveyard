@@ -46,6 +46,7 @@ export class MockLambdaRepository implements ILambdaRepository {
       functionName: f.FunctionName,
       runtime: f.Runtime,
       lastModified: f.LastModified,
+      memorySize: f.MemorySize || 128,
     }));
   }
 }

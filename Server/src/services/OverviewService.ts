@@ -3,8 +3,9 @@ import { IAccountRepository } from "../interfaces/IAccountRepository.js";
 import { IRegionRepository } from "../interfaces/IRegionRepository.js";
 import { IInstanceRepository } from "../interfaces/IInstanceRepository.js";
 import { IRDSRepository } from "../interfaces/IRDSRepository.js";
-import { IEcsRepository } from "../interfaces/IEcsRepository.js";
+import { IEcsRepository, ECSService } from "../interfaces/IEcsRepository.js";
 import { ILambdaRepository } from "../interfaces/ILambdaRepository.js";
+import { IVolumeRepository } from "../interfaces/IVolumeRepository.js";
 import { ICloudWatchRepository } from "../interfaces/ICloudWatchRepository.js";
 import { OverviewDTO } from "../DTOClasses/Overview.DTO.js";
 import { RegionOverviewDTO } from "../DTOClasses/RegionOverview.DTO.js";
@@ -13,11 +14,14 @@ import { RDSOverviewDTO } from "../DTOClasses/RDSOverview.DTO.js";
 import { ECSOverviewDTO } from "../DTOClasses/ECSOverview.DTO.js";
 import { LambdaOverviewDTO } from "../DTOClasses/LambdaOverview.DTO.js";
 import { ZombieScoringService } from "./ZombieScoringService.js";
+import { ResourceIntelligenceService } from "./ResourceIntelligenceService.js";
 
 const CACHE_KEY = "account:overview";
 const CACHE_TTL = 300;
 
 export class OverviewService {
+  private resourceIntelligenceService: ResourceIntelligenceService;
+
   constructor(
     private accountRepository: IAccountRepository,
     private regionRepository: IRegionRepository,
@@ -25,12 +29,15 @@ export class OverviewService {
     private rdsRepository: IRDSRepository,
     private ecsRepository: IEcsRepository,
     private lambdaRepository: ILambdaRepository,
+    private volumeRepository: IVolumeRepository,
     private cloudWatchRepository: ICloudWatchRepository,
     private zombieScoringService: ZombieScoringService,
     private redisClient: Redis
-  ) {}
+  ) {
+    this.resourceIntelligenceService = new ResourceIntelligenceService();
+  }
 
-  async getOverview(refresh: boolean = false): Promise<OverviewDTO> {
+  async getAccountOverview(refresh: boolean = false): Promise<OverviewDTO> {
     if (!refresh) {
       const cached = await this.getCachedOverview();
       if (cached) {
@@ -131,14 +138,15 @@ export class OverviewService {
     const instances = await this.instanceRepository.getRunningInstances(region);
 
     if (instances.length === 0) {
-      return new EC2OverviewDTO(0, 0, 0);
+      return new EC2OverviewDTO(0, 0, 0, []);
     }
 
     let totalCpu = 0;
     let totalNetwork = 0;
     let totalScore = 0;
+    let totalMonthlyCost = 0;
 
-    const instanceMetrics = await Promise.all(
+    const instancesWithIntelligence = await Promise.all(
       instances.map(async (instance) => {
         const [cpu, network] = await Promise.all([
           this.cloudWatchRepository.getEC2CPUUtilization(
@@ -152,39 +160,61 @@ export class OverviewService {
         ]);
 
         const hasTags = Object.keys(instance.tags).length > 0;
+
+        // Calculate intelligence
+        const intelligence = this.resourceIntelligenceService.calculateEC2Intelligence({
+          instanceType: instance.instanceType,
+          avgCpuUtilization: cpu,
+          networkIn: network,
+          networkOut: 0, // Network traffic is combined in getEC2NetworkTraffic
+          hasTags,
+        });
+
+        // Attach intelligence to instance
+        instance.intelligence = intelligence;
+
+        // Legacy scoring for backward compatibility
         const score = this.zombieScoringService.calculateEC2ZombieScore({
           avgCpuUtilization: cpu,
           networkTraffic: network,
           hasTags,
         });
 
-        return { cpu, network, score };
+        return { cpu, network, score, monthlyCost: intelligence.monthlyCost };
       })
     );
 
-    for (const metrics of instanceMetrics) {
+    for (const metrics of instancesWithIntelligence) {
       totalCpu += metrics.cpu;
       totalNetwork += metrics.network;
       totalScore += metrics.score;
+      totalMonthlyCost += metrics.monthlyCost;
     }
 
     const avgCpu = totalCpu / instances.length;
     const avgZombieScore = Math.round(totalScore / instances.length);
 
-    return new EC2OverviewDTO(instances.length, avgCpu, avgZombieScore);
+    return new EC2OverviewDTO(
+      instances.length,
+      avgCpu,
+      avgZombieScore,
+      instances,
+      totalMonthlyCost
+    );
   }
 
   private async scanRDS(region: string): Promise<RDSOverviewDTO> {
     const instances = await this.rdsRepository.getRunningInstances(region);
 
     if (instances.length === 0) {
-      return new RDSOverviewDTO(0, 0, 0);
+      return new RDSOverviewDTO(0, 0, 0, [], 0);
     }
 
     let totalCpu = 0;
     let totalScore = 0;
+    let totalMonthlyCost = 0;
 
-    const instanceMetrics = await Promise.all(
+    const instancesWithIntelligence = await Promise.all(
       instances.map(async (instance) => {
         const [cpu, connections] = await Promise.all([
           this.cloudWatchRepository.getRDSCPUUtilization(
@@ -197,24 +227,42 @@ export class OverviewService {
           ),
         ]);
 
+        // Calculate intelligence
+        const intelligence = this.resourceIntelligenceService.calculateRDSIntelligence({
+          engine: instance.engine,
+          avgCpuUtilization: cpu,
+          connections,
+        });
+
+        // Attach intelligence to instance
+        instance.intelligence = intelligence;
+
+        // Legacy scoring for backward compatibility
         const score = this.zombieScoringService.calculateRDSZombieScore({
           avgCpuUtilization: cpu,
           connections,
         });
 
-        return { cpu, score };
+        return { cpu, score, monthlyCost: intelligence.monthlyCost };
       })
     );
 
-    for (const metrics of instanceMetrics) {
+    for (const metrics of instancesWithIntelligence) {
       totalCpu += metrics.cpu;
       totalScore += metrics.score;
+      totalMonthlyCost += metrics.monthlyCost;
     }
 
     const avgCpu = totalCpu / instances.length;
     const avgZombieScore = Math.round(totalScore / instances.length);
 
-    return new RDSOverviewDTO(instances.length, avgCpu, avgZombieScore);
+    return new RDSOverviewDTO(
+      instances.length,
+      avgCpu,
+      avgZombieScore,
+      instances,
+      totalMonthlyCost
+    );
   }
 
   private async scanECS(region: string): Promise<ECSOverviewDTO> {
@@ -224,6 +272,8 @@ export class OverviewService {
     let totalRunningTasks = 0;
     let totalScore = 0;
     let serviceCount = 0;
+    let totalMonthlyCost = 0;
+    const allServices: ECSService[] = [];
 
     for (const cluster of clusters) {
       const services = await this.ecsRepository.getServices(
@@ -235,49 +285,79 @@ export class OverviewService {
       totalRunningTasks += cluster.runningTasksCount;
 
       for (const service of services) {
+        // Calculate intelligence
+        const intelligence = this.resourceIntelligenceService.calculateECSIntelligence({
+          runningCount: service.runningCount,
+          desiredCount: service.desiredCount,
+        });
+
+        // Attach intelligence to service
+        service.intelligence = intelligence;
+        allServices.push(service);
+
+        // Legacy scoring for backward compatibility
         const score = this.zombieScoringService.calculateECSZombieScore({
           runningTasks: service.runningCount,
           desiredCount: service.desiredCount,
         });
         totalScore += score;
         serviceCount++;
+        totalMonthlyCost += intelligence.monthlyCost;
       }
     }
 
     const avgZombieScore =
       serviceCount > 0 ? Math.round(totalScore / serviceCount) : 0;
 
-    return new ECSOverviewDTO(totalServices, totalRunningTasks, avgZombieScore);
+    return new ECSOverviewDTO(
+      totalServices,
+      totalRunningTasks,
+      avgZombieScore,
+      allServices,
+      totalMonthlyCost
+    );
   }
 
   private async scanLambda(region: string): Promise<LambdaOverviewDTO> {
     const functions = await this.lambdaRepository.getFunctions(region);
 
     if (functions.length === 0) {
-      return new LambdaOverviewDTO(0, 0, 0);
+      return new LambdaOverviewDTO(0, 0, 0, [], 0);
     }
 
     let totalInvocations = 0;
     let totalScore = 0;
+    let totalMonthlyCost = 0;
 
-    const functionMetrics = await Promise.all(
+    const functionsWithIntelligence = await Promise.all(
       functions.map(async (func) => {
         const invocations = await this.cloudWatchRepository.getLambdaInvocations(
           region,
           func.functionName
         );
 
+        // Calculate intelligence
+        const intelligence = this.resourceIntelligenceService.calculateLambdaIntelligence({
+          memorySize: func.memorySize ?? 128,
+          avgInvocations: invocations,
+        });
+
+        // Attach intelligence to function
+        func.intelligence = intelligence;
+
+        // Legacy scoring for backward compatibility
         const score = this.zombieScoringService.calculateLambdaZombieScore({
           avgInvocations: invocations,
         });
 
-        return { invocations, score };
+        return { invocations, score, monthlyCost: intelligence.monthlyCost };
       })
     );
 
-    for (const metrics of functionMetrics) {
+    for (const metrics of functionsWithIntelligence) {
       totalInvocations += metrics.invocations;
       totalScore += metrics.score;
+      totalMonthlyCost += metrics.monthlyCost;
     }
 
     const avgInvocations = totalInvocations / functions.length;
@@ -286,7 +366,9 @@ export class OverviewService {
     return new LambdaOverviewDTO(
       functions.length,
       avgInvocations,
-      avgZombieScore
+      avgZombieScore,
+      functions,
+      totalMonthlyCost
     );
   }
 }
