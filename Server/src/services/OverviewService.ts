@@ -37,7 +37,7 @@ export class OverviewService {
     this.resourceIntelligenceService = new ResourceIntelligenceService();
   }
 
-  async getOverview(refresh: boolean = false): Promise<OverviewDTO> {
+  async getAccountOverview(refresh: boolean = false): Promise<OverviewDTO> {
     if (!refresh) {
       const cached = await this.getCachedOverview();
       if (cached) {

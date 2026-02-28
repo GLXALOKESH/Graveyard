@@ -30,14 +30,14 @@ const overviewService = new OverviewService(
   redisClient
 );
 
-export const getOverview = async (
+export const getAccountOverview = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const refresh = req.query.refresh === "true";
-    const overview = await overviewService.getOverview(refresh);
+    const overview = await overviewService.getAccountOverview(refresh);
 
     const response = new ResponseDTO<OverviewDTO>();
     response.setStatus(true);
