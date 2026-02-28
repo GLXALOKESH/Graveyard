@@ -9,9 +9,9 @@ export const requestLogger = (req: Request, _res: Response, next: NextFunction) 
   const method = req.method;
   const url = req.originalUrl;
   const ip = req.ip || req.socket.remoteAddress || "unknown";
-  const userAgent = req.get("user-agent") || "unknown";
+//   const userAgent = req.get("user-agent") || "unknown";
 
-  console.log(`[${timestamp}] ${method} ${url} - IP: ${ip} - User-Agent: ${userAgent}`);
+  console.log(`[${timestamp}] ${method} ${url} - IP: ${ip}`);
 
   next();
 };
