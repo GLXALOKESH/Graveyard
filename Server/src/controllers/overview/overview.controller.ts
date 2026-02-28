@@ -1,24 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 import { OverviewService } from "../../services/OverviewService.js";
-import { AwsAccountRepository } from "../../repositories/AwsAccountRepository.js";
-import { AwsRegionRepository } from "../../repositories/AwsRegionRepository.js";
-import { AwsInstanceRepository } from "../../repositories/AwsInstanceRepository.js";
-import { AwsRdsRepository } from "../../repositories/AwsRdsRepository.js";
-import { AwsEcsRepository } from "../../repositories/AwsEcsRepository.js";
-import { AwsLambdaRepository } from "../../repositories/AwsLambdaRepository.js";
-import { AwsCloudWatchRepository } from "../../repositories/AwsCloudWatchRepository.js";
 import { ZombieScoringService } from "../../services/ZombieScoringService.js";
 import { redisClient } from "../../configs/redisClient.js";
+import { RepositoryFactory } from "../../configs/repositoryFactory.js";
 import { ResponseDTO } from "../../DTOClasses/response.DTO.js";
 import { OverviewDTO } from "../../DTOClasses/Overview.DTO.js";
 
-const accountRepository = new AwsAccountRepository();
-const regionRepository = new AwsRegionRepository();
-const instanceRepository = new AwsInstanceRepository();
-const rdsRepository = new AwsRdsRepository();
-const ecsRepository = new AwsEcsRepository();
-const lambdaRepository = new AwsLambdaRepository();
-const cloudWatchRepository = new AwsCloudWatchRepository();
+// Get repositories from factory (switches between AWS and Mock based on USE_MOCK env var)
+const accountRepository = RepositoryFactory.getAccountRepository();
+const regionRepository = RepositoryFactory.getRegionRepository();
+const instanceRepository = RepositoryFactory.getInstanceRepository();
+const rdsRepository = RepositoryFactory.getRdsRepository();
+const ecsRepository = RepositoryFactory.getEcsRepository();
+const lambdaRepository = RepositoryFactory.getLambdaRepository();
+const cloudWatchRepository = RepositoryFactory.getCloudWatchRepository();
 const zombieScoringService = new ZombieScoringService();
 
 const overviewService = new OverviewService(

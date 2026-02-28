@@ -1,23 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { AccountScanService } from "../../services/AccountScanService.js";
-import { AwsAccountRepository } from "../../repositories/AwsAccountRepository.js";
-import { AwsRegionRepository } from "../../repositories/AwsRegionRepository.js";
-import { AwsInstanceRepository } from "../../repositories/AwsInstanceRepository.js";
-import { AwsVolumeRepository } from "../../repositories/AwsVolumeRepository.js";
+import { DynamicRepositoryFactory } from "../../configs/dynamicRepositoryFactory.js";
 import { ResponseDTO } from "../../DTOClasses/response.DTO.js";
 import { AccountSummaryDTO } from "../../DTOClasses/AccountSummary.DTO.js";
-
-const accountRepository = new AwsAccountRepository();
-const regionRepository = new AwsRegionRepository();
-const instanceRepository = new AwsInstanceRepository();
-const volumeRepository = new AwsVolumeRepository();
-
-const accountScanService = new AccountScanService(
-  accountRepository,
-  regionRepository,
-  instanceRepository,
-  volumeRepository
-);
 
 export const getAccountSummary = async (
   req: Request,
@@ -25,6 +10,22 @@ export const getAccountSummary = async (
   next: NextFunction
 ) => {
   try {
+    const { accountType, credentials, region } = req.body;
+
+    // Create repositories dynamically based on request
+    const repos = DynamicRepositoryFactory.createRepositories(
+      accountType,
+      credentials,
+      region
+    );
+
+    const accountScanService = new AccountScanService(
+      repos.accountRepository,
+      repos.regionRepository,
+      repos.instanceRepository,
+      repos.volumeRepository
+    );
+
     const summary = await accountScanService.scanAccount();
 
     const response = new ResponseDTO<AccountSummaryDTO>();
