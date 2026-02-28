@@ -15,7 +15,7 @@ export class MockLambdaRepository implements ILambdaRepository {
   /**
    * Create a mock Lambda function
    */
-  createLambda(
+  async createLambda(
     region: string,
     config: {
       functionName: string;
@@ -23,7 +23,7 @@ export class MockLambdaRepository implements ILambdaRepository {
       memorySize?: number;
       isZombie?: boolean;
     }
-  ): MockLambdaFunction {
+  ): Promise<MockLambdaFunction> {
     return this.state.createLambda(region, config);
   }
 
@@ -33,7 +33,7 @@ export class MockLambdaRepository implements ILambdaRepository {
   async listLambda(region: string): Promise<{
     Functions: MockLambdaFunction[];
   }> {
-    const functions = this.state.listLambda(region);
+    const functions = await this.state.listLambda(region);
     return { Functions: functions };
   }
 
@@ -41,7 +41,7 @@ export class MockLambdaRepository implements ILambdaRepository {
    * ILambdaRepository implementation
    */
   async getFunctions(region: string): Promise<LambdaFunction[]> {
-    const functions = this.state.listLambda(region);
+    const functions = await this.state.listLambda(region);
     return functions.map((f) => ({
       functionName: f.FunctionName,
       runtime: f.Runtime,

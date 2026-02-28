@@ -25,12 +25,12 @@ export class MockS3Repository implements IS3Repository {
   /**
    * Create a mock S3 bucket
    */
-  createS3(
+  async createS3(
     region: string,
     config: {
       bucketName: string;
     }
-  ): MockS3Bucket {
+  ): Promise<MockS3Bucket> {
     return this.state.createS3(region, config);
   }
 
@@ -40,7 +40,7 @@ export class MockS3Repository implements IS3Repository {
   async listS3(region: string): Promise<{
     Buckets: MockS3Bucket[];
   }> {
-    const buckets = this.state.listS3(region);
+    const buckets = await this.state.listS3(region);
     return { Buckets: buckets };
   }
 
@@ -48,7 +48,7 @@ export class MockS3Repository implements IS3Repository {
    * IS3Repository implementation
    */
   async getBuckets(region: string): Promise<S3Bucket[]> {
-    const buckets = this.state.listS3(region);
+    const buckets = await this.state.listS3(region);
     return buckets.map((b) => ({
       name: b.Name,
       creationDate: b.CreationDate,
