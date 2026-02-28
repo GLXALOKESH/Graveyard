@@ -1,9 +1,17 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'https://jpcft5nn-8099.inc1.devtunnels.ms/api/v1/mock';
+const ACCOUNT_API_BASE_URL = 'https://jpcft5nn-8099.inc1.devtunnels.ms/api/v1/account';
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+const accountApiClient = axios.create({
+    baseURL: ACCOUNT_API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -14,7 +22,7 @@ export interface ApiError {
     message: string;
     errors?: Record<string, string>;
 }
-export const lsd = "dd"
+export const lsd = "dd";
 // Helper to extract error message
 export const handleApiError = (error: any): string => {
     if (axios.isAxiosError(error)) {
@@ -131,4 +139,20 @@ export const MockApiService = {
     // State Management
     resetAll: () => apiClient.post('/reset'),
     resetRegion: (region: string) => apiClient.post(`/reset/${region}`),
+};
+
+// --- Account API ---
+export interface AccountOverviewParams {
+    accountType: 'mock' | 'real';
+    credentials?: {
+        accessKeyId: string;
+        secretAccessKey: string;
+        sessionToken?: string;
+    };
+    region?: string;
+}
+
+export const AccountApiService = {
+    getOverview: (data: AccountOverviewParams, refresh: boolean = true) =>
+        accountApiClient.post(`/overview?refresh=${refresh}`, data)
 };

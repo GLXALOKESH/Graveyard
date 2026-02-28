@@ -5,6 +5,7 @@ import LightRays from '../../components/LightRays';
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AccountApiService } from '../../services/mockApi';
 
 // --- Utilities ---
 const generateLogTimestamp = () => {
@@ -77,7 +78,13 @@ export default function ScanClient() {
     const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
     const [logs, setLogs] = useState<{ time: string, type: string, msg: string }[]>([]);
     const [scanComplete, setScanComplete] = useState(false);
+    const [isClient, setIsClient] = useState(false);
     const logsEndRef = useRef<HTMLDivElement>(null);
+
+    // Initial mount to prevent hydration mismatch for timestamps
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     // Auto-scroll logs
     useEffect(() => {
@@ -90,7 +97,32 @@ export default function ScanClient() {
 
         let isMounted = true;
 
-        const runScan = async () => {
+        const runScanAndFetch = async () => {
+            // 1. Kick off the API fetch immediately
+            const fetchPromise = (async () => {
+                try {
+                    const configStr = localStorage.getItem('aws_dashboard_config');
+                    let apiConfig = { accountType: 'mock' } as any;
+                    if (configStr) {
+                        const parsed = JSON.parse(configStr);
+                        apiConfig = {
+                            accountType: parsed.accountType,
+                            ...(parsed.credentials ? { credentials: parsed.credentials } : {}),
+                            ...(parsed.region ? { region: parsed.region } : {})
+                        };
+                    }
+
+                    const res = await AccountApiService.getOverview(apiConfig, true);
+                    if (res.data?.data) {
+                        localStorage.setItem('aws_dashboard_data', JSON.stringify(res.data.data));
+                    }
+                } catch (err) {
+                    console.error("Background scan fetch failed:", err);
+                    // We don't fail the UI, dashboard will handle error mapping/fallback
+                }
+            })();
+
+            // 2. Run the visual animation sequence
             for (let i = 0; i < scanPhases.length; i++) {
                 if (!isMounted) return;
 
@@ -115,18 +147,15 @@ export default function ScanClient() {
                 await new Promise(resolve => setTimeout(resolve, logInterval));
             }
 
+            // 3. Ensure fetch is actually done before revealing the button
+            await fetchPromise;
+
             if (isMounted) {
                 setScanComplete(true);
-                // After completion, wait a second then automatically forward to dashboard (simulated)
-                setTimeout(() => {
-                    // For now, redirect to a "dashboard" placeholder or alert
-                    // alert("Scan Complete. Redirecting to Waste Map...");
-                    // router.push("/dashboard"); 
-                }, 2000);
             }
         };
 
-        runScan();
+        runScanAndFetch();
 
         return () => {
             isMounted = false;
@@ -201,10 +230,10 @@ export default function ScanClient() {
                                 <div key={phase.id} className="flex items-start gap-4 z-10 relative">
                                     {/* Icon Indicator */}
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors duration-300 bg-[#0B0F19] ${isPast || scanComplete
-                                            ? 'border-emerald-500 text-emerald-400'
-                                            : isCurrent
-                                                ? 'border-purple-500 text-purple-400 shadow-[0_0_15px_rgba(139,92,246,0.3)]'
-                                                : 'border-slate-800 text-slate-600'
+                                        ? 'border-emerald-500 text-emerald-400'
+                                        : isCurrent
+                                            ? 'border-purple-500 text-purple-400 shadow-[0_0_15px_rgba(139,92,246,0.3)]'
+                                            : 'border-slate-800 text-slate-600'
                                         }`}>
                                         {isPast || scanComplete ? (
                                             <Icon icon="solar:check-read-linear" className="text-lg" />
@@ -254,17 +283,19 @@ export default function ScanClient() {
 
                     {/* Terminal Body */}
                     <div className="flex-1 p-4 overflow-y-auto custom-scrollbar text-xs leading-relaxed space-y-1.5">
-                        <div className="text-slate-500 mb-4">
-                            [{generateLogTimestamp()}] [SYSTEM] Initializing Exorcist Scan Engine...<br />
-                            [{generateLogTimestamp()}] [SYSTEM] Target: Connected AWS Account (ID: 987654321098)<br />
-                            [{generateLogTimestamp()}] [SYSTEM] Mode: Read-Only Audit
-                        </div>
+                        {isClient && (
+                            <div className="text-slate-500 mb-4">
+                                [{generateLogTimestamp()}] [SYSTEM] Initializing Exorcist Scan Engine...<br />
+                                [{generateLogTimestamp()}] [SYSTEM] Target: Connected AWS Account (ID: 987654321098)<br />
+                                [{generateLogTimestamp()}] [SYSTEM] Mode: Read-Only Audit
+                            </div>
+                        )}
 
                         {logs.map((log, i) => (
                             <div key={i} className={`flex gap-3 hover:bg-white/5 px-2 py-1 rounded-sm transition-colors ${log.type === 'error' ? 'text-red-400' :
-                                    log.type === 'warning' ? 'text-amber-400' :
-                                        log.type === 'success' ? 'text-emerald-400' :
-                                            'text-slate-300'
+                                log.type === 'warning' ? 'text-amber-400' :
+                                    log.type === 'success' ? 'text-emerald-400' :
+                                        'text-slate-300'
                                 }`}>
                                 <span className="text-slate-600 shrink-0">[{log.time}]</span>
                                 <span className="font-semibold shrink-0">

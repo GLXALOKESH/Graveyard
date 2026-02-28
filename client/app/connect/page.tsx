@@ -1,9 +1,34 @@
-import React from 'react'
+'use client'
+import React, { useState } from 'react'
 import LightRays from '../../components/LightRays'
 import Link from 'next/link'
 import { Icon } from '@iconify/react'
+import { useRouter } from 'next/navigation'
 
 const ConnectCloud = () => {
+    const router = useRouter();
+    const [name, setName] = useState('');
+    const [accessKey, setAccessKey] = useState('');
+    const [secretKey, setSecretKey] = useState('');
+    const [envType, setEnvType] = useState('mock');
+
+    const handleConnect = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // Save config to local storage
+        const config = {
+            name: name || 'Mock Environment',
+            accountType: envType,
+            credentials: {
+                accessKeyId: accessKey || 'mock-key',
+                secretAccessKey: secretKey || 'mock-secret'
+            }
+        };
+        localStorage.setItem('aws_dashboard_config', JSON.stringify(config));
+
+        // Redirect to scan
+        router.push('/scan');
+    };
     // Mock data for saved connections
     const savedConnections = [
         {
@@ -87,7 +112,7 @@ const ConnectCloud = () => {
                         </div>
                     </div>
 
-                    <form className="flex flex-col gap-5">
+                    <form className="flex flex-col gap-5" onSubmit={handleConnect}>
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-slate-400 ml-1">Connection Name</label>
                             <div className="relative">
@@ -97,6 +122,8 @@ const ConnectCloud = () => {
                                 <input
                                     type="text"
                                     placeholder="e.g. Production Account"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     className='w-full h-11 pl-10 pr-4 rounded-xl bg-slate-900/50 border border-white/10 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-light text-sm'
                                 />
                             </div>
@@ -111,6 +138,8 @@ const ConnectCloud = () => {
                                 <input
                                     type="text"
                                     placeholder="AKIAIOSFODNN7EXAMPLE"
+                                    value={accessKey}
+                                    onChange={(e) => setAccessKey(e.target.value)}
                                     className='w-full h-11 pl-10 pr-4 rounded-xl bg-slate-900/50 border border-white/10 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-light text-sm font-mono'
                                 />
                             </div>
@@ -125,6 +154,8 @@ const ConnectCloud = () => {
                                 <input
                                     type="password"
                                     placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+                                    value={secretKey}
+                                    onChange={(e) => setSecretKey(e.target.value)}
                                     className='w-full h-11 pl-10 pr-4 rounded-xl bg-slate-900/50 border border-white/10 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-light text-sm font-mono'
                                 />
                             </div>
@@ -138,9 +169,10 @@ const ConnectCloud = () => {
                                 </div>
                                 <select
                                     className='w-full h-11 pl-10 pr-10 rounded-xl bg-slate-900/50 border border-white/10 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-light text-sm appearance-none cursor-pointer'
-                                    defaultValue="aws"
+                                    value={envType}
+                                    onChange={(e) => setEnvType(e.target.value)}
                                 >
-                                    <option value="aws" className="bg-[#0B0F19]">Real AWS Environment</option>
+                                    <option value="real" className="bg-[#0B0F19]">Real AWS Environment</option>
                                     <option value="mock" className="bg-[#0B0F19]">Mock API (Testing)</option>
                                 </select>
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -150,7 +182,7 @@ const ConnectCloud = () => {
                         </div>
 
                         <button
-                            type="button"
+                            type="submit"
                             className="w-full mt-2 h-11 rounded-xl bg-linear-to-r from-emerald-500 to-emerald-400 text-slate-950 font-semibold text-sm shadow-[0_0_20px_rgba(52,211,153,0.2)] hover:shadow-[0_0_30px_rgba(52,211,153,0.3)] hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                         >
                             Connect Environment
