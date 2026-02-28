@@ -1,8 +1,11 @@
+import { ResourceIntelligence } from "../services/ResourceIntelligenceService.js";
+
 export interface ECSService {
   serviceName: string;
   runningCount: number;
   desiredCount: number;
   clusterArn: string;
+  intelligence?: ResourceIntelligence;
 }
 
 export interface ECSCluster {

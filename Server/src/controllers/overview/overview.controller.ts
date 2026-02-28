@@ -13,6 +13,7 @@ const instanceRepository = RepositoryFactory.getInstanceRepository();
 const rdsRepository = RepositoryFactory.getRdsRepository();
 const ecsRepository = RepositoryFactory.getEcsRepository();
 const lambdaRepository = RepositoryFactory.getLambdaRepository();
+const volumeRepository = RepositoryFactory.getVolumeRepository();
 const cloudWatchRepository = RepositoryFactory.getCloudWatchRepository();
 const zombieScoringService = new ZombieScoringService();
 
@@ -23,6 +24,7 @@ const overviewService = new OverviewService(
   rdsRepository,
   ecsRepository,
   lambdaRepository,
+  volumeRepository,
   cloudWatchRepository,
   zombieScoringService,
   redisClient
