@@ -3,6 +3,13 @@
 import React from "react";
 import { Icon } from '@iconify/react';
 import Link from "next/link";
+import FloatingLines from "../components/floatingLine";
+import DashboardMockup from "../components/dashboardMockup";
+import Aurora from "../components/Aurora";
+import Plasma from "../components/Plasma";
+import GridScan from "../components/GridScan";
+
+
 
 export default function LandingPage() {
     return (
@@ -36,6 +43,20 @@ export default function LandingPage() {
 
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+
+                {/* Floating Lines Background */}
+                <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0, zIndex: 0 }}>
+                  <FloatingLines 
+                    enabledWaves={["top","middle","bottom"]}
+                    lineCount={5}
+                    lineDistance={5}
+                    bendRadius={5}
+                    bendStrength={-0.5}
+                    interactive={true}
+                    parallax={true}
+                  />
+                </div>
+
                 {/* Background glows */}
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
                 <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
@@ -68,104 +89,26 @@ export default function LandingPage() {
                     </div>
 
                     {/* Dashboard Mockup */}
-                    <div className="mt-20 w-full max-w-5xl rounded-2xl bg-[#0B0F19] border border-white/10 shadow-2xl overflow-hidden relative">
-                        {/* Mac window controls */}
-                        <div className="h-10 bg-slate-900/50 border-b border-white/5 flex items-center px-4 gap-2">
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
-                            <div className="mx-auto flex items-center gap-2 text-xs text-slate-500 font-medium">
-                                <Icon icon="solar:lock-keyhole-linear" />
-                                read-only-audit.cwe
-                            </div>
-                        </div>
-
-                        <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
-                            {/* Metrics Sidebar */}
-                            <div className="flex flex-col gap-4">
-                                <div className="p-4 rounded-xl bg-slate-900/50 border border-white/5">
-                                    <div className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Total Waste Detected</div>
-                                    <div className="text-3xl font-semibold text-emerald-400 tracking-tight">$14,280<span className="text-sm text-slate-500 font-normal">/mo</span></div>
-                                </div>
-                                <div className="p-4 rounded-xl bg-slate-900/50 border border-white/5">
-                                    <div className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-3">Zombie Distribution</div>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-3">
-                                            <Icon icon="solar:server-square-linear" className="text-slate-400 text-lg" />
-                                            <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                                <div className="h-full bg-purple-500 w-[45%]" />
-                                            </div>
-                                            <span className="text-xs text-slate-400 w-8 text-right">45%</span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Icon icon="solar:hard-drive-linear" className="text-slate-400 text-lg" />
-                                            <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                                <div className="h-full bg-emerald-400 w-[30%]" />
-                                            </div>
-                                            <span className="text-xs text-slate-400 w-8 text-right">30%</span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Icon icon="solar:global-linear" className="text-slate-400 text-lg" />
-                                            <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                                <div className="h-full bg-slate-500 w-[25%]" />
-                                            </div>
-                                            <span className="text-xs text-slate-400 w-8 text-right">25%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Abstract Waste Map */}
-                            <div className="lg:col-span-2 relative min-h-[300px] rounded-xl border border-white/5 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-slate-900 to-[#0B0F19] flex items-center justify-center p-6">
-                                {/* Grid lines */}
-                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:24px_24px]" />
-
-                                {/* Nodes Container */}
-                                <div className="relative w-full max-w-md aspect-video flex items-center justify-center">
-                                    {/* Center Node */}
-                                    <div className="absolute w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center z-20 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                                        <Icon icon="solar:cloud-linear" className="text-slate-300 text-xl" />
-                                    </div>
-
-                                    {/* Connecting Lines */}
-                                    <div className="absolute top-1/2 left-1/2 w-32 h-px bg-linear-to-r from-slate-600 to-emerald-500/50 -rotate-45 origin-left z-10" />
-                                    <div className="absolute top-1/2 left-1/2 w-40 h-px bg-linear-to-r from-slate-600 to-purple-500/50 rotate-12 origin-left z-10" />
-                                    <div className="absolute top-1/2 left-1/2 w-28 h-px bg-linear-to-l from-slate-600 to-slate-500/50 rotate-[160deg] origin-left z-10" />
-
-                                    {/* Zombie Nodes */}
-                                    <div className="absolute top-[10%] left-[80%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 z-20">
-                                        <div className="w-8 h-8 rounded-full bg-emerald-400/20 border border-emerald-400 flex items-center justify-center animate-[pulse-subtle_3s_cubic-bezier(0.4,0,0.6,1)_infinite] shadow-[0_0_15px_rgba(52,211,153,0.3)]">
-                                            <Icon icon="solar:server-square-linear" className="text-emerald-400 text-sm" />
-                                        </div>
-                                        <span className="text-[10px] bg-slate-900 border border-white/10 px-1.5 py-0.5 rounded text-slate-300">i-0a1b2c...</span>
-                                    </div>
-
-                                    <div className="absolute top-[70%] left-[90%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 z-20">
-                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-                                            <Icon icon="solar:hard-drive-linear" className="text-purple-400 text-sm" />
-                                        </div>
-                                        <span className="text-[10px] bg-slate-900 border border-white/10 px-1.5 py-0.5 rounded text-slate-300">vol-09x8...</span>
-                                    </div>
-
-                                    <div className="absolute top-[30%] left-[10%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 z-20">
-                                        <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center">
-                                            <Icon icon="solar:global-linear" className="text-slate-400 text-xs" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <DashboardMockup />
                 </div>
             </section>
 
             {/* The "Zombie" Problem */}
-            <section id="problem" className="py-24 bg-slate-950 border-t border-white/5 relative">
-                <div className="max-w-7xl mx-auto px-6">
+            <section id="problem" className="py-24 bg-slate-950 border-t border-white/5 relative overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <Aurora
+                      colorStops={["#7cff67","#B19EEF","#5227FF"]}
+                      blend={0.5}
+                      amplitude={1.0}
+                      speed={1}
+                    />
+                </div>
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="flex flex-col items-center text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-50">Identify the Undead.</h2>
                         <p className="mt-4 text-slate-400 text-lg max-w-2xl font-light">Resources that drain your budget while providing zero value to production. We find them based on strict, transparent rules.</p>
                     </div>
+
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                         {[
@@ -223,74 +166,37 @@ export default function LandingPage() {
                             </ul>
                         </div>
 
-                        <div className="relative">
-                            <div className="absolute -inset-1 bg-linear-to-r from-emerald-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-50" />
-
-                            <div className="relative bg-slate-950 border border-white/10 rounded-2xl p-6 shadow-2xl">
-                                <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded bg-slate-900 border border-white/5 flex items-center justify-center">
-                                            <Icon icon="solar:server-square-linear" className="text-slate-400" />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-medium text-slate-200 font-mono">i-0abcdef1234567890</div>
-                                            <div className="text-xs text-slate-500">us-east-1a • t3.large</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-xs text-slate-500 uppercase tracking-wide">Confidence Score</div>
-                                        <div className="text-2xl font-semibold text-emerald-400">92%</div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-5">
-                                    <div>
-                                        <div className="flex justify-between text-xs mb-2">
-                                            <span className="text-slate-400 flex items-center gap-1.5"><Icon icon="solar:cpu-linear" /> CPU Weight (40%)</span>
-                                            <span className="text-emerald-400 font-mono">Max 1.2% / 14d</span>
-                                        </div>
-                                        <div className="w-full bg-slate-900 rounded-full h-1.5">
-                                            <div className="bg-linear-to-r from-emerald-600 to-emerald-400 h-1.5 rounded-full w-[95%]" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="flex justify-between text-xs mb-2">
-                                            <span className="text-slate-400 flex items-center gap-1.5"><Icon icon="solar:routing-linear" /> Network I/O (30%)</span>
-                                            <span className="text-emerald-400 font-mono">&lt; 5MB / 14d</span>
-                                        </div>
-                                        <div className="w-full bg-slate-900 rounded-full h-1.5">
-                                            <div className="bg-linear-to-r from-emerald-600 to-emerald-400 h-1.5 rounded-full w-[88%]" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="flex justify-between text-xs mb-2">
-                                            <span className="text-slate-400 flex items-center gap-1.5"><Icon icon="solar:tag-linear" /> Tag Context (30%)</span>
-                                            <span className="text-emerald-400 font-mono">env: sandbox</span>
-                                        </div>
-                                        <div className="w-full bg-slate-900 rounded-full h-1.5">
-                                            <div className="bg-linear-to-r from-emerald-600 to-emerald-400 h-1.5 rounded-full w-[100%]" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-                                    <div className="text-xs text-slate-500">Status: <span className="text-emerald-400 font-medium">Ready for Exorcism</span></div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-slate-400">Mark Ignore</span>
-                                        <div className="w-8 h-4 bg-slate-800 rounded-full relative cursor-pointer border border-white/5">
-                                            <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-slate-500 rounded-full" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div style={{ width: '100%', height: '600px', position: 'relative' }}>
+                            <GridScan
+                                sensitivity={0.55}
+                                lineThickness={1}
+                                linesColor="#392e4e"
+                                gridScale={0.1}
+                                scanColor="#FF9FFC"
+                                scanOpacity={0.4}
+                                enablePost
+                                bloomIntensity={0.6}
+                                chromaticAberration={0.002}
+                                noiseIntensity={0.01}
+                            />
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* The Safety Guarantee */}
-            <section id="safety" className="py-24 bg-slate-950 border-t border-white/5">
-                <div className="max-w-7xl mx-auto px-6">
+            <section id="safety" className="py-24 bg-slate-950 border-t border-white/5 relative overflow-hidden">
+                <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0, zIndex: 0 }}>
+                    <Plasma 
+                        color="#B19EEE"
+                        speed={0.6}
+                        direction="forward"
+                        scale={1.1}
+                        opacity={0.8}
+                        mouseInteractive={true}
+                    />
+                </div>
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-50">Exorcism without the Risk.</h2>
                         <p className="mt-4 text-slate-400 text-lg max-w-2xl mx-auto font-light">Built for DevOps teams who know that deleting the wrong thing is worse than paying for waste.</p>
