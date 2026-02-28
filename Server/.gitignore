@@ -49,3 +49,5 @@ Thumbs.db
 .cache/
 tmp/
 temp/
+
+ZOMBIE_SCORING_ALGORITHMS.md
