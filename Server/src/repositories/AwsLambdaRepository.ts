@@ -9,8 +9,12 @@ import {
 import { createLambdaClient } from "../configs/awsClientFactory.js";
 
 export class AwsLambdaRepository implements ILambdaRepository {
+  protected createLambdaClient(region: string): LambdaClient {
+    return createLambdaClient(region);
+  }
+
   async getFunctions(region: string): Promise<LambdaFunction[]> {
-    const lambdaClient = createLambdaClient(region);
+    const lambdaClient = this.createLambdaClient(region);
 
     try {
       const functions: LambdaFunction[] = [];
@@ -30,6 +34,7 @@ export class AwsLambdaRepository implements ILambdaRepository {
                 functionName: func.FunctionName,
                 runtime: func.Runtime || "unknown",
                 lastModified: func.LastModified || "unknown",
+                memorySize: func.MemorySize || 128,
               });
             }
           }
