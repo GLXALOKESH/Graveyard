@@ -21,7 +21,7 @@ export class MockCloudWatchRepository implements ICloudWatchRepository {
     instanceId: string,
     _days?: number
   ): Promise<number> {
-    const metrics = this.state.getEC2Metrics(instanceId, region);
+    const metrics = await this.state.getEC2Metrics(instanceId, region);
     return metrics?.cpu ?? 0;
   }
 
@@ -33,7 +33,7 @@ export class MockCloudWatchRepository implements ICloudWatchRepository {
     dbInstanceIdentifier: string,
     _days?: number
   ): Promise<number> {
-    const metrics = this.state.getRDSMetrics(dbInstanceIdentifier, region);
+    const metrics = await this.state.getRDSMetrics(dbInstanceIdentifier, region);
     return metrics?.cpu ?? 0;
   }
 
@@ -45,7 +45,7 @@ export class MockCloudWatchRepository implements ICloudWatchRepository {
     functionName: string,
     _days?: number
   ): Promise<number> {
-    const metrics = this.state.getLambdaMetrics(functionName, region);
+    const metrics = await this.state.getLambdaMetrics(functionName, region);
     return metrics?.invocations ?? 0;
   }
 
@@ -69,7 +69,7 @@ export class MockCloudWatchRepository implements ICloudWatchRepository {
     instanceId: string,
     _days?: number
   ): Promise<number> {
-    const metrics = this.state.getEC2Metrics(instanceId, region);
+    const metrics = await this.state.getEC2Metrics(instanceId, region);
     if (!metrics) return 0;
     return metrics.networkIn + metrics.networkOut;
   }
@@ -82,7 +82,7 @@ export class MockCloudWatchRepository implements ICloudWatchRepository {
     dbInstanceIdentifier: string,
     _days?: number
   ): Promise<number> {
-    const metrics = this.state.getRDSMetrics(dbInstanceIdentifier, region);
+    const metrics = await this.state.getRDSMetrics(dbInstanceIdentifier, region);
     return metrics?.connections ?? 0;
   }
 }

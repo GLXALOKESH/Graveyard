@@ -1,4 +1,5 @@
-// Central in-memory state for all mock repositories
+// Central state for all mock resources - persisted in Redis
+import { redisClient } from "../../configs/redisClient.js";
 
 // Mock EC2 Instance with full details
 export interface MockEC2Instance {
@@ -63,6 +64,16 @@ export interface RegionData {
   s3: MockS3Bucket[];
 }
 
+// Redis key prefixes
+const REDIS_PREFIX = "mock:region:";
+const REDIS_KEYS = {
+  ec2: (region: string) => `${REDIS_PREFIX}${region}:ec2`,
+  ecs: (region: string) => `${REDIS_PREFIX}${region}:ecs`,
+  lambda: (region: string) => `${REDIS_PREFIX}${region}:lambda`,
+  rds: (region: string) => `${REDIS_PREFIX}${region}:rds`,
+  s3: (region: string) => `${REDIS_PREFIX}${region}:s3`,
+};
+
 // ID Generators
 export const generateEC2InstanceId = (): string => {
   const chars = "abcdef0123456789";
@@ -103,15 +114,14 @@ export const randomInRange = (min: number, max: number): number => {
 };
 
 /**
- * Singleton state manager for mock data
+ * Singleton state manager for mock data - persisted in Redis
  */
 export class MockCloudState {
   private static instance: MockCloudState;
-  private regions: Map<string, RegionData>;
+  private redis: typeof redisClient;
 
   private constructor() {
-    this.regions = new Map();
-    this.initializeDefaultData();
+    this.redis = redisClient;
   }
 
   static getInstance(): MockCloudState {
@@ -121,57 +131,64 @@ export class MockCloudState {
     return MockCloudState.instance;
   }
 
+  // ==================== Redis Helper Methods ====================
+
+  private async getResource<T>(key: string): Promise<T[]> {
+    try {
+      const data = await this.redis.get(key);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error(`Redis get error for ${key}:`, error);
+      return [];
+    }
+  }
+
+  private async setResource<T>(key: string, data: T[]): Promise<void> {
+    try {
+      // No TTL - data persists until explicitly deleted
+      await this.redis.set(key, JSON.stringify(data));
+    } catch (error) {
+      console.error(`Redis set error for ${key}:`, error);
+    }
+  }
+
+  private async deleteResource(key: string): Promise<void> {
+    try {
+      await this.redis.del(key);
+    } catch (error) {
+      console.error(`Redis del error for ${key}:`, error);
+    }
+  }
+
   /**
    * Reset all mock data
    */
-  reset(): void {
-    this.regions.clear();
-    this.initializeDefaultData();
+  async reset(): Promise<void> {
+    try {
+      const keys = await this.redis.keys(`${REDIS_PREFIX}*`);
+      if (keys.length > 0) {
+        await this.redis.del(...keys);
+      }
+    } catch (error) {
+      console.error("Redis reset error:", error);
+    }
   }
 
   /**
    * Clear a specific region
    */
-  clearRegion(region: string): void {
-    this.regions.delete(region);
-  }
-
-  /**
-   * Initialize with some default mock data for testing
-   */
-  private initializeDefaultData(): void {
-    const defaultRegions = ["us-east-1", "us-west-2", "eu-west-1"];
-
-    for (const region of defaultRegions) {
-      this.initializeRegion(region);
+  async clearRegion(region: string): Promise<void> {
+    const keys = Object.values(REDIS_KEYS).map((fn) => fn(region));
+    try {
+      await this.redis.del(...keys);
+    } catch (error) {
+      console.error(`Redis clearRegion error for ${region}:`, error);
     }
-  }
-
-  /**
-   * Initialize a region with empty data structures
-   */
-  private initializeRegion(region: string): RegionData {
-    const regionData: RegionData = {
-      ec2: [],
-      ecs: [],
-      lambda: [],
-      rds: [],
-      s3: [],
-    };
-    this.regions.set(region, regionData);
-    return regionData;
-  }
-
-  /**
-   * Get or create region data
-   */
-  getRegionData(region: string): RegionData {
-    return this.regions.get(region) || this.initializeRegion(region);
   }
 
   // ==================== EC2 Operations ====================
 
-  createEC2(
+  async createEC2(
     region: string,
     config: {
       instanceType?: string;
@@ -179,8 +196,9 @@ export class MockCloudState {
       tags?: Record<string, string>;
       isZombie?: boolean;
     }
-  ): MockEC2Instance {
-    const regionData = this.getRegionData(region);
+  ): Promise<MockEC2Instance> {
+    const key = REDIS_KEYS.ec2(region);
+    const instances = await this.getResource<MockEC2Instance>(key);
     const instanceId = generateEC2InstanceId();
 
     const isZombie = config.isZombie ?? Math.random() < 0.3;
@@ -198,16 +216,19 @@ export class MockCloudState {
       NetworkOut: randomInRange(networkConfig.min, networkConfig.max),
     };
 
-    regionData.ec2.push(instance);
+    instances.push(instance);
+    await this.setResource(key, instances);
     return instance;
   }
 
-  listEC2(region: string): MockEC2Instance[] {
-    return this.getRegionData(region).ec2;
+  async listEC2(region: string): Promise<MockEC2Instance[]> {
+    return this.getResource<MockEC2Instance>(REDIS_KEYS.ec2(region));
   }
 
-  getEC2Metrics(instanceId: string, region: string): { cpu: number; networkIn: number; networkOut: number } | null {
-    const instance = this.getRegionData(region).ec2.find((i) => i.InstanceId === instanceId);
+  async getEC2Metrics(instanceId: string, region: string): Promise<{ cpu: number; networkIn: number; networkOut: number } | null> {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const instances = await this.listEC2(region);
+    const instance = instances.find((i) => i.InstanceId === instanceId);
     if (!instance) return null;
     return {
       cpu: instance.CpuUtilization,
@@ -218,7 +239,7 @@ export class MockCloudState {
 
   // ==================== ECS Operations ====================
 
-  createECS(
+  async createECS(
     region: string,
     config: {
       clusterName: string;
@@ -229,8 +250,9 @@ export class MockCloudState {
         status?: string;
       }>;
     }
-  ): MockECSCluster {
-    const regionData = this.getRegionData(region);
+  ): Promise<MockECSCluster> {
+    const key = REDIS_KEYS.ecs(region);
+    const clusters = await this.getResource<MockECSCluster>(key);
     const clusterArn = generateClusterArn(region, MOCK_ACCOUNT_ID, config.clusterName);
 
     const services: MockECSService[] =
@@ -249,17 +271,18 @@ export class MockCloudState {
       services,
     };
 
-    regionData.ecs.push(cluster);
+    clusters.push(cluster);
+    await this.setResource(key, clusters);
     return cluster;
   }
 
-  listECS(region: string): MockECSCluster[] {
-    return this.getRegionData(region).ecs;
+  async listECS(region: string): Promise<MockECSCluster[]> {
+    return this.getResource<MockECSCluster>(REDIS_KEYS.ecs(region));
   }
 
   // ==================== Lambda Operations ====================
 
-  createLambda(
+  async createLambda(
     region: string,
     config: {
       functionName: string;
@@ -267,8 +290,9 @@ export class MockCloudState {
       memorySize?: number;
       isZombie?: boolean;
     }
-  ): MockLambdaFunction {
-    const regionData = this.getRegionData(region);
+  ): Promise<MockLambdaFunction> {
+    const key = REDIS_KEYS.lambda(region);
+    const functions = await this.getResource<MockLambdaFunction>(key);
 
     const isZombie = config.isZombie ?? Math.random() < 0.3;
     const invConfig = isZombie
@@ -284,23 +308,26 @@ export class MockCloudState {
       FunctionArn: generateFunctionArn(region, MOCK_ACCOUNT_ID, config.functionName),
     };
 
-    regionData.lambda.push(func);
+    functions.push(func);
+    await this.setResource(key, functions);
     return func;
   }
 
-  listLambda(region: string): MockLambdaFunction[] {
-    return this.getRegionData(region).lambda;
+  async listLambda(region: string): Promise<MockLambdaFunction[]> {
+    return this.getResource<MockLambdaFunction>(REDIS_KEYS.lambda(region));
   }
 
-  getLambdaMetrics(functionName: string, region: string): { invocations: number } | null {
-    const func = this.getRegionData(region).lambda.find((f) => f.FunctionName === functionName);
+  async getLambdaMetrics(functionName: string, region: string): Promise<{ invocations: number } | null> {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const functions = await this.listLambda(region);
+    const func = functions.find((f) => f.FunctionName === functionName);
     if (!func) return null;
     return { invocations: func.Invocations };
   }
 
   // ==================== RDS Operations ====================
 
-  createRDS(
+  async createRDS(
     region: string,
     config: {
       dbInstanceIdentifier: string;
@@ -308,8 +335,9 @@ export class MockCloudState {
       status?: "available" | "creating" | "deleting";
       isZombie?: boolean;
     }
-  ): MockRDSInstance {
-    const regionData = this.getRegionData(region);
+  ): Promise<MockRDSInstance> {
+    const key = REDIS_KEYS.rds(region);
+    const instances = await this.getResource<MockRDSInstance>(key);
 
     const isZombie = config.isZombie ?? Math.random() < 0.3;
     const cpuConfig = isZombie ? mockConfig.rdsCpuLow : mockConfig.rdsCpuHigh;
@@ -323,16 +351,19 @@ export class MockCloudState {
       Connections: Math.floor(randomInRange(connConfig.min, connConfig.max)),
     };
 
-    regionData.rds.push(instance);
+    instances.push(instance);
+    await this.setResource(key, instances);
     return instance;
   }
 
-  listRDS(region: string): MockRDSInstance[] {
-    return this.getRegionData(region).rds;
+  async listRDS(region: string): Promise<MockRDSInstance[]> {
+    return this.getResource<MockRDSInstance>(REDIS_KEYS.rds(region));
   }
 
-  getRDSMetrics(dbInstanceIdentifier: string, region: string): { cpu: number; connections: number } | null {
-    const instance = this.getRegionData(region).rds.find(
+  async getRDSMetrics(dbInstanceIdentifier: string, region: string): Promise<{ cpu: number; connections: number } | null> {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const instances = await this.listRDS(region);
+    const instance = instances.find(
       (i) => i.DBInstanceIdentifier === dbInstanceIdentifier
     );
     if (!instance) return null;
@@ -344,24 +375,26 @@ export class MockCloudState {
 
   // ==================== S3 Operations ====================
 
-  createS3(
+  async createS3(
     region: string,
     config: {
       bucketName: string;
     }
-  ): MockS3Bucket {
-    const regionData = this.getRegionData(region);
+  ): Promise<MockS3Bucket> {
+    const key = REDIS_KEYS.s3(region);
+    const buckets = await this.getResource<MockS3Bucket>(key);
 
     const bucket: MockS3Bucket = {
       Name: config.bucketName,
       CreationDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
     };
 
-    regionData.s3.push(bucket);
+    buckets.push(bucket);
+    await this.setResource(key, buckets);
     return bucket;
   }
 
-  listS3(region: string): MockS3Bucket[] {
-    return this.getRegionData(region).s3;
+  async listS3(region: string): Promise<MockS3Bucket[]> {
+    return this.getResource<MockS3Bucket>(REDIS_KEYS.s3(region));
   }
 }
