@@ -27,8 +27,7 @@ export class AccountScanRequestDTO {
   @IsObject()
   @ValidateNested()
   @Type(() => AWSCredentialsDTO)
-  @IsOptional()
-  credentials?: AWSCredentialsDTO;
+  credentials!: AWSCredentialsDTO;
 
   @IsString()
   @IsOptional()
