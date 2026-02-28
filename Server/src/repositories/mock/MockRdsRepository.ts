@@ -15,7 +15,7 @@ export class MockRdsRepository implements IRDSRepository {
   /**
    * Create a mock RDS instance
    */
-  createRDS(
+  async createRDS(
     region: string,
     config: {
       dbInstanceIdentifier: string;
@@ -23,7 +23,7 @@ export class MockRdsRepository implements IRDSRepository {
       status?: "available" | "creating" | "deleting";
       isZombie?: boolean;
     }
-  ): MockRDSInstance {
+  ): Promise<MockRDSInstance> {
     return this.state.createRDS(region, config);
   }
 
@@ -33,7 +33,7 @@ export class MockRdsRepository implements IRDSRepository {
   async listRDS(region: string): Promise<{
     DBInstances: MockRDSInstance[];
   }> {
-    const instances = this.state.listRDS(region);
+    const instances = await this.state.listRDS(region);
     return { DBInstances: instances };
   }
 
@@ -41,7 +41,7 @@ export class MockRdsRepository implements IRDSRepository {
    * IRDSRepository implementation
    */
   async getRunningInstances(region: string): Promise<RDSInstance[]> {
-    const instances = this.state.listRDS(region);
+    const instances = await this.state.listRDS(region);
     return instances
       .filter((i) => i.DBInstanceStatus === "available")
       .map((i) => ({

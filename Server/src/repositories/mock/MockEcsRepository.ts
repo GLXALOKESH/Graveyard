@@ -15,7 +15,7 @@ export class MockEcsRepository implements IEcsRepository {
   /**
    * Create a mock ECS cluster with services
    */
-  createECS(
+  async createECS(
     region: string,
     config: {
       clusterName: string;
@@ -26,7 +26,7 @@ export class MockEcsRepository implements IEcsRepository {
         status?: string;
       }>;
     }
-  ): MockECSCluster {
+  ): Promise<MockECSCluster> {
     return this.state.createECS(region, config);
   }
 
@@ -36,7 +36,7 @@ export class MockEcsRepository implements IEcsRepository {
   async listECS(region: string): Promise<{
     clusters: MockECSCluster[];
   }> {
-    const clusters = this.state.listECS(region);
+    const clusters = await this.state.listECS(region);
     return { clusters };
   }
 
@@ -44,7 +44,7 @@ export class MockEcsRepository implements IEcsRepository {
    * IEcsRepository implementation
    */
   async getClusters(region: string): Promise<ECSCluster[]> {
-    const clusters = this.state.listECS(region);
+    const clusters = await this.state.listECS(region);
     return clusters.map((c) => ({
       clusterName: c.clusterName,
       clusterArn: c.clusterArn,
@@ -53,7 +53,7 @@ export class MockEcsRepository implements IEcsRepository {
   }
 
   async getServices(region: string, clusterArn: string): Promise<ECSService[]> {
-    const clusters = this.state.listECS(region);
+    const clusters = await this.state.listECS(region);
     const cluster = clusters.find((c) => c.clusterArn === clusterArn);
     if (!cluster) return [];
 

@@ -18,7 +18,7 @@ export class MockInstanceRepository implements IInstanceRepository {
   /**
    * Create a mock EC2 instance
    */
-  createEC2(
+  async createEC2(
     region: string,
     config: {
       instanceType?: string;
@@ -26,7 +26,7 @@ export class MockInstanceRepository implements IInstanceRepository {
       tags?: Record<string, string>;
       isZombie?: boolean;
     }
-  ): MockEC2Instance {
+  ): Promise<MockEC2Instance> {
     return this.state.createEC2(region, config);
   }
 
@@ -38,7 +38,7 @@ export class MockInstanceRepository implements IInstanceRepository {
       Instances: MockEC2Instance[];
     }>;
   }> {
-    const instances = this.state.listEC2(region);
+    const instances = await this.state.listEC2(region);
     return {
       Reservations: instances.length > 0 ? [{ Instances: instances }] : [],
     };
@@ -48,12 +48,12 @@ export class MockInstanceRepository implements IInstanceRepository {
    * IInstanceRepository implementation
    */
   async countRunningInstances(region: string): Promise<number> {
-    const instances = this.state.listEC2(region);
+    const instances = await this.state.listEC2(region);
     return instances.filter((i) => i.State.Name === "running").length;
   }
 
   async getRunningInstances(region: string): Promise<EC2Instance[]> {
-    const instances = this.state.listEC2(region);
+    const instances = await this.state.listEC2(region);
     return instances
       .filter((i) => i.State.Name === "running")
       .map((i) => ({
