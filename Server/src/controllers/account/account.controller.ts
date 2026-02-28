@@ -1,16 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { AccountScanService } from "../../services/AccountScanService.js";
-import { AwsAccountRepository } from "../../repositories/AwsAccountRepository.js";
-import { AwsRegionRepository } from "../../repositories/AwsRegionRepository.js";
-import { AwsInstanceRepository } from "../../repositories/AwsInstanceRepository.js";
-import { AwsVolumeRepository } from "../../repositories/AwsVolumeRepository.js";
+import { RepositoryFactory } from "../../configs/repositoryFactory.js";
 import { ResponseDTO } from "../../DTOClasses/response.DTO.js";
 import { AccountSummaryDTO } from "../../DTOClasses/AccountSummary.DTO.js";
 
-const accountRepository = new AwsAccountRepository();
-const regionRepository = new AwsRegionRepository();
-const instanceRepository = new AwsInstanceRepository();
-const volumeRepository = new AwsVolumeRepository();
+// Get repositories from factory (switches between AWS and Mock based on USE_MOCK env var)
+const accountRepository = RepositoryFactory.getAccountRepository();
+const regionRepository = RepositoryFactory.getRegionRepository();
+const instanceRepository = RepositoryFactory.getInstanceRepository();
+const volumeRepository = RepositoryFactory.getVolumeRepository();
 
 const accountScanService = new AccountScanService(
   accountRepository,
