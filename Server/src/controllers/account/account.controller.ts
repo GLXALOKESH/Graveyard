@@ -1,21 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { AccountScanService } from "../../services/AccountScanService.js";
-import { RepositoryFactory } from "../../configs/repositoryFactory.js";
+import { DynamicRepositoryFactory } from "../../configs/dynamicRepositoryFactory.js";
 import { ResponseDTO } from "../../DTOClasses/response.DTO.js";
 import { AccountSummaryDTO } from "../../DTOClasses/AccountSummary.DTO.js";
-
-// Get repositories from factory (switches between AWS and Mock based on USE_MOCK env var)
-const accountRepository = RepositoryFactory.getAccountRepository();
-const regionRepository = RepositoryFactory.getRegionRepository();
-const instanceRepository = RepositoryFactory.getInstanceRepository();
-const volumeRepository = RepositoryFactory.getVolumeRepository();
-
-const accountScanService = new AccountScanService(
-  accountRepository,
-  regionRepository,
-  instanceRepository,
-  volumeRepository
-);
 
 export const getAccountSummary = async (
   req: Request,
@@ -23,6 +10,22 @@ export const getAccountSummary = async (
   next: NextFunction
 ) => {
   try {
+    const { accountType, credentials, region } = req.body;
+
+    // Create repositories dynamically based on request
+    const repos = DynamicRepositoryFactory.createRepositories(
+      accountType,
+      credentials,
+      region
+    );
+
+    const accountScanService = new AccountScanService(
+      repos.accountRepository,
+      repos.regionRepository,
+      repos.instanceRepository,
+      repos.volumeRepository
+    );
+
     const summary = await accountScanService.scanAccount();
 
     const response = new ResponseDTO<AccountSummaryDTO>();
