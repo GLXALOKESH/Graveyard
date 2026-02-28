@@ -33,6 +33,10 @@ import {
 import {
   createSTSClientWithCredentials,
   createEC2ClientWithCredentials,
+  createRDSClientWithCredentials,
+  createECSClientWithCredentials,
+  createLambdaClientWithCredentials,
+  createCloudWatchClientWithCredentials,
   AWSCredentials,
 } from "./awsClientFactory.js";
 
@@ -40,20 +44,37 @@ import {
 
 /**
  * Creates AWS repositories with specific credentials
+ * Each repository creates clients on-demand with the provided credentials
  */
 class DynamicAwsAccountRepository extends AwsAccountRepository {
+  private credentials: AWSCredentials;
+  private region: string;
+
   constructor(credentials: AWSCredentials, region: string) {
     super();
-    // Override the STS client with credentials
-    (this as any).stsClient = createSTSClientWithCredentials(region, credentials);
+    this.credentials = credentials;
+    this.region = region;
+  }
+
+  // Override to create client with credentials
+  protected createSTSClient(): import("@aws-sdk/client-sts").STSClient {
+    return createSTSClientWithCredentials(this.region, this.credentials);
   }
 }
 
 class DynamicAwsRegionRepository extends AwsRegionRepository {
+  private credentials: AWSCredentials;
+  private region: string;
+
   constructor(credentials: AWSCredentials, region: string) {
     super();
-    // Override the EC2 client with credentials
-    (this as any).ec2Client = createEC2ClientWithCredentials(region, credentials);
+    this.credentials = credentials;
+    this.region = region;
+  }
+
+  // Override to create client with credentials
+  protected createEC2Client(): import("@aws-sdk/client-ec2").EC2Client {
+    return createEC2ClientWithCredentials(this.region, this.credentials);
   }
 }
 
@@ -66,7 +87,7 @@ class DynamicAwsInstanceRepository extends AwsInstanceRepository {
   }
 
   // Override to create client with credentials per call
-  protected createClient(region: string) {
+  protected createEC2Client(region: string): import("@aws-sdk/client-ec2").EC2Client {
     return createEC2ClientWithCredentials(region, this.credentials);
   }
 }
@@ -80,8 +101,64 @@ class DynamicAwsVolumeRepository extends AwsVolumeRepository {
   }
 
   // Override to create client with credentials per call
-  protected createClient(region: string) {
+  protected createEC2Client(region: string): import("@aws-sdk/client-ec2").EC2Client {
     return createEC2ClientWithCredentials(region, this.credentials);
+  }
+}
+
+class DynamicAwsRdsRepository extends AwsRdsRepository {
+  private credentials: AWSCredentials;
+
+  constructor(credentials: AWSCredentials) {
+    super();
+    this.credentials = credentials;
+  }
+
+  // Override to create client with credentials per call
+  protected createRDSClient(region: string): import("@aws-sdk/client-rds").RDSClient {
+    return createRDSClientWithCredentials(region, this.credentials);
+  }
+}
+
+class DynamicAwsEcsRepository extends AwsEcsRepository {
+  private credentials: AWSCredentials;
+
+  constructor(credentials: AWSCredentials) {
+    super();
+    this.credentials = credentials;
+  }
+
+  // Override to create client with credentials per call
+  protected createECSClient(region: string): import("@aws-sdk/client-ecs").ECSClient {
+    return createECSClientWithCredentials(region, this.credentials);
+  }
+}
+
+class DynamicAwsLambdaRepository extends AwsLambdaRepository {
+  private credentials: AWSCredentials;
+
+  constructor(credentials: AWSCredentials) {
+    super();
+    this.credentials = credentials;
+  }
+
+  // Override to create client with credentials per call
+  protected createLambdaClient(region: string): import("@aws-sdk/client-lambda").LambdaClient {
+    return createLambdaClientWithCredentials(region, this.credentials);
+  }
+}
+
+class DynamicAwsCloudWatchRepository extends AwsCloudWatchRepository {
+  private credentials: AWSCredentials;
+
+  constructor(credentials: AWSCredentials) {
+    super();
+    this.credentials = credentials;
+  }
+
+  // Override to create client with credentials per call
+  protected createCloudWatchClient(region: string): import("@aws-sdk/client-cloudwatch").CloudWatchClient {
+    return createCloudWatchClientWithCredentials(region, this.credentials);
   }
 }
 
@@ -130,12 +207,12 @@ export class DynamicRepositoryFactory {
     return {
       accountRepository: new DynamicAwsAccountRepository(credentials, region),
       regionRepository: new DynamicAwsRegionRepository(credentials, region),
-      instanceRepository: new AwsInstanceRepository(), // Uses env vars - need to update
-      rdsRepository: new AwsRdsRepository(),
-      ecsRepository: new AwsEcsRepository(),
-      lambdaRepository: new AwsLambdaRepository(),
-      cloudWatchRepository: new AwsCloudWatchRepository(),
-      volumeRepository: new AwsVolumeRepository(),
+      instanceRepository: new DynamicAwsInstanceRepository(credentials),
+      rdsRepository: new DynamicAwsRdsRepository(credentials),
+      ecsRepository: new DynamicAwsEcsRepository(credentials),
+      lambdaRepository: new DynamicAwsLambdaRepository(credentials),
+      cloudWatchRepository: new DynamicAwsCloudWatchRepository(credentials),
+      volumeRepository: new DynamicAwsVolumeRepository(credentials),
     };
   }
 

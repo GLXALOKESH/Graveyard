@@ -9,7 +9,11 @@ export class AwsAccountRepository implements IAccountRepository {
   private stsClient: STSClient;
 
   constructor() {
-    this.stsClient = createSTSClient();
+    this.stsClient = this.createSTSClient();
+  }
+
+  protected createSTSClient(): STSClient {
+    return createSTSClient();
   }
 
   async getAccountInfo(): Promise<AccountInfo> {
