@@ -6,15 +6,22 @@ import {
 import { createSTSClient } from "../configs/awsClientFactory.js";
 
 export class AwsAccountRepository implements IAccountRepository {
-  private stsClient: STSClient;
+  private stsClient: STSClient | null = null;
 
-  constructor() {
-    this.stsClient = createSTSClient();
+  protected getSTSClient(): STSClient {
+    if (!this.stsClient) {
+      this.stsClient = this.createSTSClient();
+    }
+    return this.stsClient;
+  }
+
+  protected createSTSClient(): STSClient {
+    return createSTSClient();
   }
 
   async getAccountInfo(): Promise<AccountInfo> {
     const command = new GetCallerIdentityCommand({});
-    const response = await this.stsClient.send(command);
+    const response = await this.getSTSClient().send(command);
 
     return {
       accountId: response.Account || "unknown",

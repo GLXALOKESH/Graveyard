@@ -1,11 +1,9 @@
 import { Router, Request, Response } from "express";
 import { WellcomeRoutes } from "../configs/routes/wellcome.js";
 import { AccountRoutes } from "../configs/routes/account.js";
-import { OverviewRoutes } from "../configs/routes/overview.js";
 import { MockRoutes } from "../configs/routes/mock.js";
 import wellcomeRoutes from "./hello/wellcome.js";
 import accountRoutes from "./account/account.routes.js";
-import overviewRoutes from "./overview/overview.routes.js";
 import mockRoutes from "./mock/mock.routes.js";
 
 const mainRouter = Router();
@@ -16,7 +14,6 @@ mainRouter.get("/", (req: Request, res: Response): void => {
 
 mainRouter.use(WellcomeRoutes.BASE_PATH, wellcomeRoutes);
 mainRouter.use(AccountRoutes.BASE_PATH, accountRoutes);
-mainRouter.use(OverviewRoutes.BASE_PATH, overviewRoutes);
 mainRouter.use(MockRoutes.BASE_PATH, mockRoutes);
 
 export default mainRouter;

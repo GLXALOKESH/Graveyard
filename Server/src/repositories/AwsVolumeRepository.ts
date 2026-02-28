@@ -3,8 +3,12 @@ import { IVolumeRepository, Volume } from "../interfaces/IVolumeRepository.js";
 import { createEC2Client } from "../configs/awsClientFactory.js";
 
 export class AwsVolumeRepository implements IVolumeRepository {
+  protected createEC2Client(region: string): EC2Client {
+    return createEC2Client(region);
+  }
+
   async countUnattachedVolumes(region: string): Promise<number> {
-    const ec2Client = createEC2Client(region);
+    const ec2Client = this.createEC2Client(region);
 
     try {
       let unattachedCount = 0;
@@ -37,7 +41,7 @@ export class AwsVolumeRepository implements IVolumeRepository {
   }
 
   async getVolumes(region: string): Promise<Volume[]> {
-    const ec2Client = createEC2Client(region);
+    const ec2Client = this.createEC2Client(region);
 
     try {
       const volumes: Volume[] = [];

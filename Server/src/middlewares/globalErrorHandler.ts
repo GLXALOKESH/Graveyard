@@ -78,6 +78,37 @@ export default function GlobalErrorHandler(
     return res.status(HttpResponseCode.CONFLICT).json(errorDto);
   }
 
+  /* ---------- AWS SDK CREDENTIAL ERRORS ---------- */
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    ((err as any).Code === "InvalidClientTokenId" ||
+      (err as any).Code === "SignatureDoesNotMatch" ||
+      (err as any).Code === "InvalidAccessKeyId" ||
+      (err as any).Code === "ExpiredToken" ||
+      (err as any).name === "CredentialsProviderError")
+  ) {
+    const errorCode = (err as any).Code || (err as any).name;
+    const errorMessage = (err as any).message || "AWS credentials are invalid";
+
+    const errorDto = new ResponseDTO<ErrorResponseDTO>();
+    errorDto.setStatus(false);
+    errorDto.setMessage("AWS credentials are invalid");
+    errorDto.setData(
+      new ErrorResponseDTO(
+        path,
+        HttpResponseCode.UNAUTHORIZED,
+        errorMessage,
+        {
+          code: errorCode,
+          suggestion: "Please verify your AWS Access Key ID and Secret Access Key are correct",
+        }
+      )
+    );
+
+    return res.status(HttpResponseCode.UNAUTHORIZED).json(errorDto);
+  }
+
   /* ---------- INVALID JSON BODY ---------- */
   if (
     typeof err === "object" &&
