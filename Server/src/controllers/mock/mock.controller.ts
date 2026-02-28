@@ -27,14 +27,7 @@ export const createEC2 = async (
   next: NextFunction
 ) => {
   try {
-    const region = req.params.region as string;
-    const {
-      instanceType,
-      state,
-      tags,
-      isZombie,
-      count = 1,
-    } = req.body;
+    const { region, instanceType, state, tags, isZombie, count = 1 } = req.body;
 
     const created = [];
     for (let i = 0; i < count; i++) {
@@ -86,8 +79,7 @@ export const createECS = async (
   next: NextFunction
 ) => {
   try {
-    const region = req.params.region as string;
-    const { clusterName, services } = req.body;
+    const { region, clusterName, services } = req.body;
 
     const cluster = await ecsRepo.createECS(region, {
       clusterName,
@@ -133,14 +125,7 @@ export const createLambda = async (
   next: NextFunction
 ) => {
   try {
-    const region = req.params.region as string;
-    const {
-      functionName,
-      runtime,
-      memorySize,
-      isZombie,
-      count = 1,
-    } = req.body;
+    const { region, functionName, runtime, memorySize, isZombie, count = 1 } = req.body;
 
     const created = [];
     for (let i = 0; i < count; i++) {
@@ -192,14 +177,7 @@ export const createRDS = async (
   next: NextFunction
 ) => {
   try {
-    const region = req.params.region as string;
-    const {
-      dbInstanceIdentifier,
-      engine,
-      status,
-      isZombie,
-      count = 1,
-    } = req.body;
+    const { region, dbInstanceIdentifier, engine, status, isZombie, count = 1 } = req.body;
 
     const created = [];
     for (let i = 0; i < count; i++) {
@@ -251,8 +229,7 @@ export const createS3 = async (
   next: NextFunction
 ) => {
   try {
-    const region = req.params.region as string;
-    const { bucketName } = req.body;
+    const { region, bucketName } = req.body;
 
     const bucket = await s3Repo.createS3(region, { bucketName });
 
@@ -295,8 +272,7 @@ export const createVolume = async (
   next: NextFunction
 ) => {
   try {
-    const region = req.params.region as string;
-    const { status, size } = req.body;
+    const { region, status, size } = req.body;
 
     const volume = await volumeRepo.createVolume(region, { status, size });
 
@@ -382,8 +358,8 @@ export const createBulk = async (
   next: NextFunction
 ) => {
   try {
-    const region = req.params.region as string;
     const {
+      region,
       ec2Count = 0,
       lambdaCount = 0,
       rdsCount = 0,

@@ -5,6 +5,7 @@ import mainRouter from "../routes/index.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import GlobalErrorHandler from "../middlewares/globalErrorHandler.js";
+import { requestLogger } from "../middlewares/requestLogger.js";
 
 
 const PORT = process.env.PORT || 8080;
@@ -18,6 +19,9 @@ server.use(cors())
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 server.use(cookieParser(COOKIE_SECRET));
+
+// Request Logger Middleware - logs all incoming requests
+server.use(requestLogger);
 
 // Registering Main Router
 server.use(BASE_API_PATH, mainRouter);
