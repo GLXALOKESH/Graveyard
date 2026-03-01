@@ -22,7 +22,7 @@ export default function LandingPage() {
                         <div className="w-8 h-8 rounded bg-linear-to-br from-purple-500/20 to-emerald-400/20 border border-white/10 flex items-center justify-center">
                             <Icon icon="solar:ghost-linear" className="text-emerald-400 text-lg" />
                         </div>
-                        <span className="text-slate-50 font-semibold text-lg tracking-tighter">CWE</span>
+                        <span className="text-slate-50 font-semibold text-lg tracking-tighter capitalize">Graveyard</span>
                     </div>
                     <div className="hidden md:flex items-center gap-8 text-sm font-medium">
                         <a href="#problem" className="hover:text-slate-50 transition-colors">The Problem</a>
@@ -46,15 +46,15 @@ export default function LandingPage() {
 
                 {/* Floating Lines Background */}
                 <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0, zIndex: 0 }}>
-                  <FloatingLines 
-                    enabledWaves={["top","middle","bottom"]}
-                    lineCount={5}
-                    lineDistance={5}
-                    bendRadius={5}
-                    bendStrength={-0.5}
-                    interactive={true}
-                    parallax={true}
-                  />
+                    <FloatingLines
+                        enabledWaves={["top", "middle", "bottom"]}
+                        lineCount={5}
+                        lineDistance={5}
+                        bendRadius={5}
+                        bendStrength={-0.5}
+                        interactive={true}
+                        parallax={true}
+                    />
                 </div>
 
                 {/* Background glows */}
@@ -97,10 +97,10 @@ export default function LandingPage() {
             <section id="problem" className="py-24 bg-slate-950 border-t border-white/5 relative overflow-hidden">
                 <div className="absolute inset-0 z-0">
                     <Aurora
-                      colorStops={["#7cff67","#B19EEF","#5227FF"]}
-                      blend={0.5}
-                      amplitude={1.0}
-                      speed={1}
+                        colorStops={["#7cff67", "#B19EEF", "#5227FF"]}
+                        blend={0.5}
+                        amplitude={1.0}
+                        speed={1}
                     />
                 </div>
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -187,7 +187,7 @@ export default function LandingPage() {
             {/* The Safety Guarantee */}
             <section id="safety" className="py-24 bg-slate-950 border-t border-white/5 relative overflow-hidden">
                 <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0, zIndex: 0 }}>
-                    <Plasma 
+                    <Plasma
                         color="#B19EEE"
                         speed={0.6}
                         direction="forward"
@@ -288,7 +288,7 @@ export default function LandingPage() {
                                 <div className="w-6 h-6 rounded bg-linear-to-br from-purple-500/20 to-emerald-400/20 border border-white/10 flex items-center justify-center">
                                     <Icon icon="solar:ghost-linear" className="text-emerald-400 text-sm" />
                                 </div>
-                                <span className="text-slate-50 font-semibold text-lg tracking-tighter">CWE</span>
+                                <span className="text-slate-50 font-semibold text-lg tracking-tighter capitalize">Graveyard</span>
                             </div>
                             <p className="text-sm text-slate-400 font-light max-w-sm mb-6">
                                 We find the resources you're paying for but not using—and tell you exactly why. Exorcise your cloud waste safely.
