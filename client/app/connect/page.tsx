@@ -11,17 +11,26 @@ const ConnectCloud = () => {
     const [accessKey, setAccessKey] = useState('');
     const [secretKey, setSecretKey] = useState('');
     const [envType, setEnvType] = useState('mock');
+    const [error, setError] = useState('');
 
     const handleConnect = (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+
+        if (envType === 'real') {
+            if (!name || !accessKey || !secretKey) {
+                setError('All fields are required for a real AWS environment.');
+                return;
+            }
+        }
 
         // Save config to local storage
         const config = {
             name: name || 'Mock Environment',
             accountType: envType,
             credentials: {
-                accessKeyId: accessKey || 'mock-key',
-                secretAccessKey: secretKey || 'mock-secret'
+                accessKeyId: envType === 'real' ? accessKey : (accessKey || 'mock-key'),
+                secretAccessKey: envType === 'real' ? secretKey : (secretKey || 'mock-secret')
             }
         };
         localStorage.setItem('aws_dashboard_config', JSON.stringify(config));
@@ -113,6 +122,11 @@ const ConnectCloud = () => {
                     </div>
 
                     <form className="flex flex-col gap-5" onSubmit={handleConnect}>
+                        {error && (
+                            <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 text-sm text-rose-400">
+                                {error}
+                            </div>
+                        )}
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-slate-400 ml-1">Connection Name</label>
                             <div className="relative">

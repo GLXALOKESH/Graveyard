@@ -4,6 +4,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, BackgroundVariant, Panel } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Icon } from '@iconify/react';
+import Link from 'next/link';
 import { CloudNode, RegionNode, ServiceNode, ResourceNode } from '../../components/mock/map/CustomNodes';
 import { mockTreeData, generateLayout, transformApiToTree, getStatusFromConfidence } from './layoutUtils';
 import { AccountApiService } from '../../services/mockApi';
@@ -45,8 +46,20 @@ export default function WasteMapDashboard() {
                 }
             }
 
+            // Check for real environment
+            let isRealEnv = false;
+            const configStr = localStorage.getItem('aws_dashboard_config');
+            let parsedConfig: any = null;
+            if (configStr) {
+                parsedConfig = JSON.parse(configStr);
+                if (parsedConfig.accountType === 'real') {
+                    isRealEnv = true;
+                }
+            }
+
             // 1. Initial Load from Scan (Fast Cache)
-            if (savedData && !isReload) {
+            // If it's a real environment AND user refreshed the page, skip cache to get fresh live data
+            if (savedData && !(isReload && isRealEnv) && !isReload) {
                 try {
                     const parsedData = transformApiToTree(JSON.parse(savedData));
                     setTreeData(parsedData);
@@ -251,6 +264,23 @@ export default function WasteMapDashboard() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Cleanup Action CTA */}
+                    <Link href="/cleanup" className="w-full relative group overflow-hidden rounded-xl p-0.5 pointer-events-auto">
+                        <div className="absolute inset-0 bg-linear-to-r from-emerald-500 to-sky-500 opacity-70 group-hover:opacity-100 transition-opacity blur-sm"></div>
+                        <div className="relative bg-[#060810] px-4 py-3 rounded-[10px] flex items-center justify-between transition-all group-hover:bg-[#060810]/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                    <Icon icon="solar:magic-stick-3-bold" className="text-emerald-400 text-lg" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-slate-100">Cleanup Planner</span>
+                                    <span className="text-[10px] text-slate-400">Generate safe remediation scripts</span>
+                                </div>
+                            </div>
+                            <Icon icon="solar:alt-arrow-right-linear" className="text-emerald-400 text-lg group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </Link>
 
                     {/* Secondary Metrics */}
                     <div className="grid grid-cols-2 gap-4">

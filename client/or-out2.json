@@ -1,0 +1,10 @@
+{
+  "error": {
+    "message": "Network connection lost.",
+    "code": 502,
+    "metadata": {
+      "provider_name": "Nvidia"
+    }
+  },
+  "user_id": "user_2wUnUqt6Pr6hJc4beiqo3QFV5pN"
+}
