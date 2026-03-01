@@ -245,7 +245,6 @@ export default function WasteMapDashboard() {
                         <Icon icon="solar:chart-pie-bold" className="text-amber-400" />
                         Executive Summary
                     </h2>
-                    <p className="text-xs text-slate-400 mt-1">Real-time mock environment analysis</p>
                 </div>
 
                 <div className="p-6 flex flex-col gap-6">
